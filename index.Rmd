@@ -62,7 +62,9 @@ en Colombia bajo acuerdo de confidencialidad:
 | • Lugar de destino    | • Tasa de cambio pactada  |
 |                       |                           |
 | • Fecha de la         | • Monto de la remesa      |
-| operación             |                           |
+| operación
+
+  • Canal                         |
 +-----------------------+---------------------------+
 :::
 
