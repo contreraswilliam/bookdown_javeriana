@@ -1,11 +1,204 @@
-# Hello bookdown 
+# Documento Bookdown - Propuesta avance 2
 
-All chapters start with a first-level heading followed by your chapter title, like the line above. There should be only one first-level heading (`#`) per .Rmd file.
+En este momento deberemos retomar la Unidad 1 en la cual se creó un minilibro que contiene el entregable de dicha unidad. Este documento tiene como repositorio GitHub (elaborado desde Markdown). Ahora, en esta Unidad 2, se debe continuar con los datos presentados en dicho entregable y se debe evidenciar, en una de las variables en el tiempo, la aproximación en promedio móvil, en rezagos y en estacionalidad. Todo lo anterior, a través de funciones y gráficas que permitan detectar patrones y ciclos de la variable.
 
-## A section
 
-All chapter sections start with a second-level (`##`) or higher heading followed by your section title, like the sections above and below here. You can have as many as you want within a chapter.
 
-### An unnumbered section {-}
+```{r warning=FALSE}
+#install.packages("forecast")
+library(forecast)
+library(tseries)
 
-Chapters and sections are numbered by default. To un-number a heading, add a `{.unnumbered}` or the shorter `{-}` at the end of the heading, like in this section.
+#install.packages("timsac")
+library(timsac)
+library(ggplot2)
+library(changepoint)
+library(readxl)
+```
+
+
+
+
+```{r}
+#install.packages(c('quantmod','ff','foreign','R.matlab'),dependency=T)
+suppressPackageStartupMessages(library(tidyverse))
+library(tidyverse)
+Datos <- read_csv('F:/Base_resumida_2023_2024.csv',show_col_types = FALSE)
+head(Datos, 50)
+```
+
+
+```{r echo=FALSE}
+Indice.ts<-ts(Datos$Monto_USD, start =c(2023,1), frequency = 12 )
+#(Indice.ts)
+```
+
+```{r}
+class(Indice.ts)
+```
+
+```{r}
+start(Indice.ts)
+```
+
+```{r}
+end(Indice.ts)
+```
+
+Estos valores indican Diciembre del año 46144 lo que no es corecto ni lógico dado que los datos van hasta octubre de 2024.
+
+En este caso, se procede a agrupar y sumar el monto en dolares por dia y se creará una serie de tiempo sobre estas varables usando ts.
+
+```{r}
+Datos$Fecha_Pago <- as.Date(Datos$Fecha_Pago, format = "%Y-%m-%d")
+Datos_agg <- aggregate(Monto_USD ~ Fecha_Pago, data = Datos, sum)
+```
+
+```{r}
+# Crear la serie de tiempo
+serie_ts <- ts(Datos_agg$Monto_USD, start = c(as.numeric(format(min(Datos_agg$Fecha_Pago), "%Y")), as.numeric(format(min(Datos_agg$Fecha_Pago), "%j"))), frequency = 365)
+(serie_ts)
+```
+
+```{r}
+class(serie_ts)
+```
+
+```{r}
+start(serie_ts)
+```
+
+```{r}
+end(serie_ts)
+```
+
+Se tiene entonces que la serie finaliza el dia 284 del año 2024.
+
+```{r echo=FALSE}
+plot(serie_ts, type = "l", col = "blue", main = "Serie de Tiempo: Monto USD", ylab = "Monto USD", xlab = "Tiempo")
+```
+
+Serie de tiempo usando xts.Si las fechas no son consecutivas o hay algunos días sin datos, se recomienda usar xts() del paquete xts
+
+
+```{r}
+# Instalar y cargar el paquete xts
+#install.packages("xts")
+#install.packages("zoo")
+library(zoo)
+library(xts)
+
+# Crear la serie de tiempo con fechas irregulares
+serie_xts <- xts(Datos_agg$Monto_USD, order.by = Datos_agg$Fecha_Pago)
+(serie_xts)
+```
+
+```{r}
+plot(serie_xts, col = "blue", main = "Serie de Tiempo: Monto USD", ylab = "Monto USD")
+```
+
+# Gráfico de resago para la serie ts
+
+```{r}
+# Gráfico de rezago para la serie 'ts'
+lag.plot(serie_ts, lags = 12, layout = c(3, 4), main = "Gráfico de Rezago para la Serie de Tiempo")
+
+```
+
+Según la gráfica no hay comportamiento que se repita en un cierto periodo.
+
+# Aproximación en promedio móvil
+
+# Promedio Móvil Simple (SMA)
+
+El promedio móvil simple es una técnica estadística utilizada para suavizar series de tiempo mediante la creación de un promedio de los valores en un intervalo específico de tiempo. Permite facilitar la identificación de tendencias subyacentes al hacer que las variaciones estacionales y aleatorias sean menos evidentes.
+
+Una de sus ventajas es que proporciona una visión clara de la tendencia general de los datos a lo largo del tiempo.
+
+SMA se usa principalmente en análisis financiero, como en el seguimiento de precios de acciones, proyecciones de ventas, y otras métricas de negocio.
+
+# Promedio Móvil Exponencial (EMA).
+
+Es similar al promedio móvil simple (SMA), pero con un enfoque que da más peso a los datos más recientes.Este puede ser más representativo de la tendencia actual en series de tiempo con alta volatilidad.
+
+Se aplica en diversas áreas de análisis de datos, como en el monitoreo de ventas, pronósticos de demanda, y otros indicadores de rendimiento.
+
+```{r}
+# Graficar solo los promedios móviles, sin la serie original
+plot(sma_serie_ts, type = "l", col = "red", lwd = 2, ylim = range(c(sma_serie_ts, ema_serie_ts), na.rm = TRUE), 
+     main = "Promedio Móvil (SMA y EMA)", ylab = "Monto USD")
+
+# Agregar la línea del EMA
+lines(ema_serie_ts, col = "green", lwd = 2)
+
+# Añadir una leyenda para identificar las líneas
+legend("topright", legend = c("SMA", "EMA"), col = c("red", "green"), lty = 1, lwd = 2)
+
+```
+
+# Promedio Móvil Simple (SMA) con serie de tiempo original
+
+```{r warning=FALSE}
+library(TTR)
+
+# Promedio Móvil Simple para la serie 'ts'
+sma_serie_ts <- SMA(serie_ts, n = 12)  # Aquí n = 12 indica la ventana de 12 periodos (por ejemplo, mensual)
+
+# Graficar la serie original y el promedio móvil
+plot(serie_ts, type = "l", col = "blue", main = "Serie de Tiempo con Promedio Móvil Simple", ylab = "Monto USD")
+lines(sma_serie_ts, col = "red", lwd = 2)  # Agregar la línea del promedio móvil
+legend("topright", legend = c("Serie Original", "Promedio Móvil (SMA)"), col = c("blue", "red"), lty = 1, lwd = 2)
+
+```
+
+
+
+# Promedio Móvil Exponencial (EMA) con serie de tiempo original
+
+
+```{r}
+# Promedio Móvil Exponencial para la serie 'ts'
+ema_serie_ts <- EMA(serie_ts, n = 12)  # Usamos una ventana de 12 periodos
+
+# Graficar la serie original y el promedio móvil exponencial
+plot(serie_ts, type = "l", col = "blue", main = "Serie de Tiempo con Promedio Móvil Exponencial", ylab = "Monto USD")
+lines(ema_serie_ts, col = "green", lwd = 2)  # Agregar la línea del promedio móvil exponencial
+legend("topright", legend = c("Serie Original", "Promedio Móvil Exponencial (EMA)"), col = c("blue", "green"), lty = 1, lwd = 2)
+
+```
+
+Al usar la serie de tiempo original, los promedios moviles tanto simple, como exponencial no son visibles, esto sugiere que la serie temporal puede tener poca volatilidad, lo que significa que los valores no cambian drásticamente de un período a otro. Esto resulta en promedios móviles que siguen de cerca la tendencia general.
+
+# Estacionalidad.
+
+La estacionalidad se refiere a patrones que se repiten en intervalos regulares de tiempo (por ejemplo, mensualmente, trimestralmente, etc.)
+
+# Descomposición de Series de Tiempo
+
+Esta técnica separa la serie en tres componentes: tendencia, estacionalidad y error
+
+```{r}
+# Descomponer la serie de tiempo
+#serie_decomp <- stl(serie_ts, s.window = "periodic")
+
+# Graficar la descomposición
+#plot(serie_decomp)
+
+```
+
+La ejecucion del codigo anterior generar el siguiente error:
+
+Error in stl(serie_ts, s.window = "periodic") : series is not periodic or has less than two periods
+
+En este caso, el error se debe a que en el set de datos, es necesario al menos dos ciclos completos de los datos estacionales.
+
+# Gráfico de Serie Temporal
+
+
+```{r}
+# Gráfico de la serie temporal
+plot(serie_ts, main = "Serie Temporal con Estacionalidad", ylab = "Monto USD", xlab = "Fecha")
+
+```
+
+La serie tiene un patrón claro que se repite a lo largo del tiempo, eso es una indicación de estacionalidad.

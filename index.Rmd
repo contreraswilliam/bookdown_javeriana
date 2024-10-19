@@ -1,6 +1,6 @@
 ---
 title: "Predicción del monto total que se va a pagar por remesas en dolares que se originan en un día."
-author: "Grupo 5"
+author: "Análisis de Series de Tiempo - Grupo 5"
 date: "`r Sys.Date()`"
 output:
   bookdown::pdf_book:
@@ -55,18 +55,17 @@ Según lo expuesto anteriormente, se identifican las siguientes variables
 para el conjunto de datos provisto por una entidad que realiza remesas
 en Colombia bajo acuerdo de confidencialidad:
 
-::: {align="center"}
-+-----------------------+---------------------------+
-| • Lugar de Origen     | • Fecha de cobro          |
-|                       |                           |
-| • Lugar de destino    | • Tasa de cambio pactada  |
-|                       |                           |
-| • Fecha de la         | • Monto de la remesa      |
-| operación
-
-  • Canal                         |
-+-----------------------+---------------------------+
-:::
++:------------------------+:--------------------------------+
+| -   **Fecha de pago.**  | -   **Canal.**                  |
++-------------------------+---------------------------------+
+| -   **Pais de Origen.** | -   **Numero de                 |
+|                         |     transacciones.**            |
++-------------------------+---------------------------------+
+| -   **Fecha de          | -   **Monto en dolares.**       |
+|     origen.**           |                                 |
++-------------------------+---------------------------------+
+| -   **Monto en Pesos.** | -   **Tasa pactada.**           |
++-------------------------+---------------------------------+
 
 En relación con la importancia de analizar esta información enfocado en
 la variable tiempo se puede decir que; el análisis de las variables de
@@ -77,3 +76,4 @@ total a pagar en remesas es esencial para mitigar este riesgo,
 permitiendo anticipar posibles pérdidas por variaciones en la tasa de
 cambio y tomar decisiones informadas sobre cobertura y gestión del
 riesgo.
+
