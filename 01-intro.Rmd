@@ -28,7 +28,7 @@ head(Datos, 50)
 ```
 
 
-```{r echo=FALSE}
+```{r}
 Indice.ts<-ts(Datos$Monto_USD, start =c(2023,1), frequency = 12 )
 #(Indice.ts)
 ```
